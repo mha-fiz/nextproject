@@ -1,13 +1,26 @@
-import Link from 'next/link';
+import EventItem from '../../components/EventItem';
 import Layout from '../../components/Layout';
+import { API_URL } from '../../config';
 
-const Events = () => {
+export async function getStaticProps() {
+  const res = await fetch(`${API_URL}/api/events`);
+  const events = await res.json();
+
+  return {
+    props: { events },
+    revalidate: 1,
+  };
+}
+
+export default function EventsPage({ events }) {
   return (
     <Layout>
-      <p>Events page</p>
-      <Link href="/">Home</Link>
+      <h1>All Event(s)</h1>
+      {!events.length && <h3>No upcoming events</h3>}
+
+      {events.map(eventItem => (
+        <EventItem key={eventItem.id} eventItem={eventItem} />
+      ))}
     </Layout>
   );
-};
-
-export default Events;
+}
