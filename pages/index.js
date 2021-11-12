@@ -4,11 +4,11 @@ import { API_URL } from '../config';
 import Link from 'next/link';
 
 export async function getStaticProps() {
-  const res = await fetch(`${API_URL}/api/events`);
+  const res = await fetch(`${API_URL}/events?_sort=date:ASC&_limit=3`);
   const events = await res.json();
 
   return {
-    props: { events: events.slice(0, 3) },
+    props: { events },
     revalidate: 1,
   };
 }
@@ -23,7 +23,7 @@ export default function Home({ events }) {
         <EventItem key={eventItem.id} eventItem={eventItem} />
       ))}
 
-      {events.length > 0 && (
+      {events.length && (
         <Link href="/events">
           <a className="btn-secondary">View All</a>
         </Link>

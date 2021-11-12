@@ -4,9 +4,12 @@ import Image from 'next/image';
 import { API_URL } from '../../config';
 import styles from '../../styles/EventPage.module.css';
 import { FaPencilAlt, FaTimes } from 'react-icons/fa';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useRouter } from 'next/router';
 
 export async function getStaticPaths() {
-  const res = await fetch(`${API_URL}/api/events`);
+  const res = await fetch(`${API_URL}/events`);
   const events = await res.json();
 
   const paths = events.map(evt => ({
@@ -24,7 +27,7 @@ export async function getStaticProps(context) {
     params: { slug },
   } = context;
 
-  const res = await fetch(`${API_URL}/api/events/${slug}`);
+  const res = await fetch(`${API_URL}/events?slug=${slug}`);
   const eventItem = await res.json();
 
   return {
@@ -36,10 +39,27 @@ export async function getStaticProps(context) {
 const EventPage = ({
   eventItem: { id, time, image, performers, venue, date, description, address },
 }) => {
-  const deleteEvent = e => console.log('delete');
+  const router = useRouter();
+
+  const deleteEvent = async e => {
+    if (confirm('Are you sure you want to delete the event?')) {
+      const res = await fetch(`${API_URL}/events/${id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message);
+      } else {
+        router.push('/events');
+      }
+    }
+  };
 
   return (
     <Layout>
+      <ToastContainer />
       <div className={styles.event}>
         <div className={styles.controls}>
           <Link href={`/events/edit/${id}`}>
@@ -53,12 +73,17 @@ const EventPage = ({
         </div>
 
         <span>
-          {date} at {time}
+          {new Date(date).toLocaleDateString('en-US')} at {time}
         </span>
 
         {image && (
           <div className={styles.image}>
-            <Image src={image} alt="event-header" width={960} height={600} />
+            <Image
+              src={image.formats.medium.url}
+              alt="event-header"
+              width={960}
+              height={600}
+            />
           </div>
         )}
 

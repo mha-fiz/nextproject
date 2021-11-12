@@ -1,22 +1,46 @@
-import Layout from '../../components/Layout';
+import Layout from '../../../components/Layout';
 import { useState } from 'react';
 import router, { useRouter } from 'next/router';
-import styles from '../../styles/Form.module.css';
+import styles from '../../../styles/Form.module.css';
 import Link from 'next/link';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { API_URL } from '../../config';
+import { API_URL } from '../../../config';
+import { format } from 'date-fns';
+import { FaImage } from 'react-icons/fa';
+import Modal from '../../../components/Modal';
+import Image from 'next/image';
+import ImageUpload from '../../../components/ImageUpload';
 
-const AddEvent = () => {
+export async function getServerSideProps(context) {
+  const {
+    params: { id },
+  } = context;
+
+  const res = await fetch(`${API_URL}/events/${id}`);
+  const data = await res.json();
+
+  return {
+    props: { evt: data },
+  };
+}
+
+const EditEvent = ({ evt }) => {
   const [values, setValues] = useState({
-    name: '',
-    address: '',
-    performers: '',
-    venue: '',
-    date: '',
-    time: '',
-    description: '',
+    name: evt.name,
+    address: evt.address,
+    performers: evt.performers,
+    venue: evt.venue,
+    date: evt.date,
+    time: evt.time,
+    description: evt.description,
   });
+
+  const [imagePreview, setImagePreview] = useState(
+    evt?.image?.formats?.thumbnail?.url ?? null
+  );
+
+  const [isModalShow, setIsModalShow] = useState(false);
 
   const handleInputChange = e => {
     const { name, value } = e.target;
@@ -32,15 +56,13 @@ const AddEvent = () => {
       return;
     }
 
-    const res = await fetch(`${API_URL}/events`, {
-      method: 'POST',
+    const res = await fetch(`${API_URL}/events/${evt.id}`, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(values),
     });
-
-    console.log('res: ', res);
 
     if (!res.ok) {
       toast.error('Something went wrong :(');
@@ -50,8 +72,16 @@ const AddEvent = () => {
     }
   };
 
+  const onImageUploaded = async e => {
+    const res = await fetch(`${API_URL}/events/${evt.id}`);
+    const data = await res.json();
+
+    setImagePreview(data.image.formats.thumbnail.url);
+    setIsModalShow(false);
+  };
+
   return (
-    <Layout title={'Add New Event'}>
+    <Layout title={'Edit Event'}>
       <Link href="/events">Go Back</Link>
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.grid}>
@@ -101,7 +131,7 @@ const AddEvent = () => {
               id="date"
               name="date"
               type="date"
-              value={values.date}
+              value={format(new Date(values.date), 'yyyy-MM-dd')}
               onChange={handleInputChange}
             />
           </div>
@@ -128,11 +158,37 @@ const AddEvent = () => {
           />
         </div>
 
-        <input type="submit" value="Add Event" className="btn" />
+        <input type="submit" value="Update Event" className="btn" />
       </form>
       <ToastContainer />
+      <h2>Event Image(s)</h2>
+      {imagePreview ? (
+        <Image
+          src={imagePreview}
+          alt="uploaded-image-thumbnail"
+          height={100}
+          width={170}
+        />
+      ) : (
+        <div>
+          <p>No image uploaded</p>
+        </div>
+      )}
+
+      <div>
+        <button onClick={() => setIsModalShow(true)} className="btn-secondary">
+          <FaImage /> Upload Image
+        </button>
+      </div>
+
+      <Modal
+        isModalShow={isModalShow}
+        onModalClose={() => setIsModalShow(false)}
+      >
+        <ImageUpload evtId={evt.id} onImageUploaded={onImageUploaded} />
+      </Modal>
     </Layout>
   );
 };
 
-export default AddEvent;
+export default EditEvent;
