@@ -4,6 +4,14 @@ import { FaTimes } from 'react-icons/fa';
 import styles from '../styles/Modal.module.css';
 
 export default function Modal({ isModalShow, title, children, onModalClose }) {
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    setWidth(window.innerWidth);
+    setHeight(window.innerHeight);
+  }, []);
+
   const [isBrowser, setIsBrowser] = useState(false);
 
   useEffect(() => setIsBrowser(true), [isBrowser]);

@@ -16,6 +16,8 @@ export async function getStaticPaths() {
     params: { slug: evt.slug },
   }));
 
+  console.log('paths: ', paths);
+
   return {
     paths,
     fallback: true,

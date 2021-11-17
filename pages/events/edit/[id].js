@@ -1,5 +1,5 @@
 import Layout from '../../../components/Layout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import router, { useRouter } from 'next/router';
 import styles from '../../../styles/Form.module.css';
 import Link from 'next/link';
@@ -15,7 +15,10 @@ import ImageUpload from '../../../components/ImageUpload';
 export async function getServerSideProps(context) {
   const {
     params: { id },
+    req,
   } = context;
+
+  // console.log('reqCtx: ', req);
 
   const res = await fetch(`${API_URL}/events/${id}`);
   const data = await res.json();
@@ -26,6 +29,14 @@ export async function getServerSideProps(context) {
 }
 
 const EditEvent = ({ evt }) => {
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    setWidth(window.innerWidth);
+    setHeight(window.innerHeight);
+  }, []);
+
   const [values, setValues] = useState({
     name: evt.name,
     address: evt.address,
