@@ -11,6 +11,7 @@ import { FaImage } from 'react-icons/fa';
 import Modal from '../../../components/Modal';
 import Image from 'next/image';
 import ImageUpload from '../../../components/ImageUpload';
+import { parseCookie } from '../../../utils';
 
 export async function getServerSideProps(context) {
   const {
@@ -18,17 +19,20 @@ export async function getServerSideProps(context) {
     req,
   } = context;
 
-  // console.log('reqCtx: ', req);
-
   const res = await fetch(`${API_URL}/events/${id}`);
   const data = await res.json();
 
+  const token = parseCookie(req);
+
   return {
-    props: { evt: data },
+    props: {
+      evt: data,
+      token,
+    },
   };
 }
 
-const EditEvent = ({ evt }) => {
+const EditEvent = ({ evt, token }) => {
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
 
@@ -71,11 +75,15 @@ const EditEvent = ({ evt }) => {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(values),
     });
 
     if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        toast.error('No token provided');
+      }
       toast.error('Something went wrong :(');
     } else {
       const evt = await res.json();
@@ -196,7 +204,11 @@ const EditEvent = ({ evt }) => {
         isModalShow={isModalShow}
         onModalClose={() => setIsModalShow(false)}
       >
-        <ImageUpload evtId={evt.id} onImageUploaded={onImageUploaded} />
+        <ImageUpload
+          evtId={evt.id}
+          onImageUploaded={onImageUploaded}
+          token={token}
+        />
       </Modal>
     </Layout>
   );

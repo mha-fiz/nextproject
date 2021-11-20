@@ -3,8 +3,7 @@ import Layout from '../../components/Layout';
 import { API_URL } from '../../config';
 import Link from 'next/link';
 import Pagination from '../../components/Pagination';
-
-const EVENT_PER_PAGE = 1;
+import { EVENT_PER_PAGE } from '../../config';
 
 export async function getServerSideProps({ query: { page = 1 } }) {
   const start =

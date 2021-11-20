@@ -6,82 +6,61 @@ import styles from '../../styles/EventPage.module.css';
 import { FaPencilAlt, FaTimes } from 'react-icons/fa';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useRouter } from 'next/router';
 
-export async function getStaticPaths() {
-  const res = await fetch(`${API_URL}/events`);
-  const events = await res.json();
+// export async function getStaticPaths() {
+//   const res = await fetch(`${API_URL}/events`);
+//   const events = await res.json();
 
-  const paths = events.map(evt => ({
-    params: { slug: evt.slug },
-  }));
+//   const paths = events.map(evt => ({
+//     params: { slug: evt.slug },
+//   }));
 
-  console.log('paths: ', paths);
+//   return {
+//     paths,
+//     fallback: true,
+//   };
+// }
 
-  return {
-    paths,
-    fallback: true,
-  };
-}
+// export async function getStaticProps(context) {
+//   const {
+//     params: { slug },
+//   } = context;
 
-export async function getStaticProps(context) {
-  const {
-    params: { slug },
-  } = context;
+//   const res = await fetch(`${API_URL}/events?slug=${slug}`);
+//   const eventItem = await res.json();
 
+//   return {
+//     props: { eventItem: eventItem[0] },
+//     revalidate: 1,
+//   };
+// }
+
+export async function getServerSideProps({ query: { slug } }) {
   const res = await fetch(`${API_URL}/events?slug=${slug}`);
-  const eventItem = await res.json();
+  const evt = await res.json();
 
   return {
-    props: { eventItem: eventItem[0] },
-    revalidate: 1,
+    props: {
+      eventItem: evt[0],
+    },
   };
 }
 
-const EventPage = ({
-  eventItem: { id, time, image, performers, venue, date, description, address },
-}) => {
-  const router = useRouter();
-
-  const deleteEvent = async e => {
-    if (confirm('Are you sure you want to delete the event?')) {
-      const res = await fetch(`${API_URL}/events/${id}`, {
-        method: 'DELETE',
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.message);
-      } else {
-        router.push('/events');
-      }
-    }
-  };
-
+const EventPage = ({ eventItem }) => {
   return (
     <Layout>
       <ToastContainer />
       <div className={styles.event}>
-        <div className={styles.controls}>
-          <Link href={`/events/edit/${id}`}>
-            <a>
-              <FaPencilAlt /> Edit Event
-            </a>
-          </Link>
-          <a href="#" className={styles.delete} onClick={deleteEvent}>
-            <FaTimes /> Delete Event
-          </a>
-        </div>
-
         <span>
-          {new Date(date).toLocaleDateString('en-US')} at {time}
+          {new Date(eventItem.date).toLocaleDateString('en-US')} at{' '}
+          {eventItem.time}
         </span>
+        <h1>{eventItem.name}</h1>
 
-        {image && (
+        {eventItem.image && (
           <div className={styles.image}>
             <Image
-              src={image.formats.medium.url}
+              src={eventItem.image.formats.medium.url}
               alt="event-header"
               width={960}
               height={600}
@@ -90,11 +69,11 @@ const EventPage = ({
         )}
 
         <h3>Performers:</h3>
-        <p>{performers}</p>
+        <p>{eventItem.performers}</p>
         <h3>Description:</h3>
-        <p>{description}</p>
-        <h3>Venue: {venue}</h3>
-        <p>{address}</p>
+        <p>{eventItem.description}</p>
+        <h3>Venue: {eventItem.venue}</h3>
+        <p>{eventItem.address}</p>
 
         <Link href="/events">
           <a className={styles.back}>{'<'}Go back</a>

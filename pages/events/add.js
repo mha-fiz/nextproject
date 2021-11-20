@@ -6,8 +6,19 @@ import Link from 'next/link';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { API_URL } from '../../config';
+import { parseCookie } from '../../utils';
 
-const AddEvent = () => {
+export async function getServerSideProps({ req }) {
+  const token = parseCookie(req);
+
+  return {
+    props: {
+      token,
+    },
+  };
+}
+
+const AddEvent = ({ token }) => {
   const [values, setValues] = useState({
     name: '',
     address: '',
@@ -36,13 +47,16 @@ const AddEvent = () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(values),
     });
 
-    console.log('res: ', res);
-
     if (!res.ok) {
+      if (res.status === 403 || res.status === 401) {
+        toast.error('No token provided');
+        return;
+      }
       toast.error('Something went wrong :(');
     } else {
       const evt = await res.json();

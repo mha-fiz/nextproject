@@ -4,4 +4,4 @@ export const API_URL =
 export const NEXT_URL =
   process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000';
 
-export const EVENT_PER_PAGE = 1;
+export const EVENT_PER_PAGE = 5;
